@@ -1,0 +1,110 @@
+[
+  {
+    "id": "TC-AXC-001",
+    "ac": "AC1",
+    "text": "Given a valid X-Axcient-Api-Key header, when axcient_list_clients is called, then it returns the clients visible to that key's Axcient organization (id, name, active)",
+    "type": "manual",
+    "steps": [
+      "Configure a real Axcient partner API key as X-Axcient-Api-Key",
+      "Call tools/call axcient_list_clients with no filters",
+      "Inspect the response body"
+    ],
+    "expect": "HTTP 200; response contains a clients[] array with at least the org's known clients, each with id/name/active; has_more reflects whether more than the default limit exist",
+    "result": "untested",
+    "evidence": "needs a real vendor account (no test API key available at design time); not run"
+  },
+  {
+    "id": "TC-AXC-002",
+    "ac": "AC2",
+    "text": "Given no X-Axcient-Api-Key header, when any axcient_* tool is called, then the service returns HTTP 401 naming the missing header",
+    "type": "auto",
+    "tests": ["tests/test_middleware.py::test_missing_credential_header_returns_401_with_required_header_name"]
+  },
+  {
+    "id": "TC-AXC-003",
+    "ac": "AC3",
+    "text": "Given the vendor API returns 401 for the configured key, when a tool calls it, then the tool result is {\"error\":{\"code\":\"unauthorized\",...}} rather than a raised exception",
+    "type": "auto",
+    "tests": ["tests/test_tools.py::test_vendor_401_maps_to_unauthorized_envelope"]
+  },
+  {
+    "id": "TC-AXC-004",
+    "ac": "AC4",
+    "text": "Given a device_id that does not exist, when axcient_get_device is called, then the vendor's 404 is surfaced as {\"error\":{\"code\":\"not_found\",...}}",
+    "type": "auto",
+    "tests": ["tests/test_tools.py::test_vendor_404_maps_to_not_found_envelope"]
+  },
+  {
+    "id": "TC-AXC-005",
+    "ac": "AC5",
+    "text": "Given a device/appliance/vault exists, when its axcient_get_* tool is called, then the response includes the vendor's own health signal (current_health_status / tunnel_status / active)",
+    "type": "manual",
+    "steps": [
+      "Configure a real Axcient partner API key",
+      "Call axcient_get_device for a known device_id",
+      "Call axcient_get_appliance and axcient_get_vault for known ids",
+      "Inspect each response for the health field"
+    ],
+    "expect": "Each response includes current_health_status (device), tunnel_status (appliance/vault) without a second call",
+    "result": "untested",
+    "evidence": "needs a real vendor account; not run"
+  },
+  {
+    "id": "TC-AXC-006",
+    "ac": "AC6",
+    "text": "Given a list endpoint has more results than the page size, when the matching axcient_list_* tool is called, then the result is capped at limit (default <=50, hard max <=200) and has_more is set correctly",
+    "type": "manual",
+    "steps": [
+      "Either use a real org with >50 clients, or feed the mocked vendor client a paged fixture of 60 records",
+      "Call axcient_list_clients with default limit",
+      "Inspect the returned count and has_more"
+    ],
+    "expect": "Exactly <=50 items returned, has_more=true; a second call with cursor returns the remainder",
+    "result": "untested",
+    "evidence": "needs a real vendor account with >50 clients, or a mocked paged fixture not yet built; not run"
+  },
+  {
+    "id": "TC-AXC-007",
+    "ac": "AC7",
+    "text": "Given a vault's connectivity threshold is changed via axcient_set_vault_connectivity_threshold, when axcient_get_vault_connectivity_threshold is called afterward, then it reflects the new value",
+    "type": "manual",
+    "steps": [
+      "Configure a real Axcient partner API key with write access to a test vault",
+      "Call axcient_get_vault_connectivity_threshold to record the current value",
+      "Call axcient_set_vault_connectivity_threshold with a different value",
+      "Call axcient_get_vault_connectivity_threshold again"
+    ],
+    "expect": "Second get call returns the value just set, not the original one",
+    "result": "untested",
+    "evidence": "needs a real vendor account with a non-production test vault; not run (write-path, must not be run against a live production vault without authorization)"
+  },
+  {
+    "id": "TC-AXC-008",
+    "ac": "AC8",
+    "text": "Given tenant A's key and tenant B's key belong to two different Axcient organizations, when tenant A calls an axcient_get_* tool with an id belonging to tenant B's organization, then no data belonging to organization B is returned to tenant A (cross-tenant / BOLA anchor)",
+    "type": "manual",
+    "steps": [
+      "Obtain two real Axcient partner API keys from two different organizations",
+      "Note a client_id/device_id/vault_id that exists under organization B",
+      "Call the matching axcient_get_* tool using organization A's key with that id",
+      "Inspect the response"
+    ],
+    "expect": "Tool returns {\"error\":{\"code\":\"not_found\"|\"unauthorized\",...}}; no fields from organization B's resource appear in the response",
+    "result": "untested",
+    "evidence": "needs two real vendor accounts in different Axcient organizations; not run"
+  },
+  {
+    "id": "TC-AXC-009",
+    "ac": "AC9",
+    "text": "Given the vendor API returns 429 with Retry-After, when a tool call hits it, then the service retries with backoff and only returns {\"error\":{\"code\":\"rate_limited\",...}} after retries are exhausted",
+    "type": "auto",
+    "tests": ["tests/test_tools.py::test_429_triggers_bounded_retry_then_rate_limited_envelope"]
+  },
+  {
+    "id": "TC-AXC-010",
+    "ac": "AC10",
+    "text": "Given two concurrent requests carry different X-Axcient-Api-Key values, when both are in flight at the same time, then neither request's credential or response data is observable by the other (contextvars isolation)",
+    "type": "auto",
+    "tests": ["tests/test_middleware.py::test_concurrent_requests_do_not_leak_credential_across_contextvars"]
+  }
+]
