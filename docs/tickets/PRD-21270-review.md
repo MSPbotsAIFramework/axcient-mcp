@@ -10,4 +10,7 @@ Verdict: changes requested
 
 ### Fixes
 
-(to be filled in by the dev leg)
+1. `src/axcient_mcp/tools/vaults.py:77` — added `destructiveHint=False` to the `ToolAnnotations(...)` call on `axcient_set_vault_connectivity_threshold`, matching the tech design's Change list (`docs/tickets/PRD-21270.md:101`) and the README. Live-verified via `create_mcp_server(Settings()).list_tools()`: the tool's `annotations` now read `destructiveHint=False idempotentHint=True` (previously `destructiveHint=None`, defaulting to `true` per the MCP SDK). Also strengthened `tests/test_tools.py`'s `EXPECTED_TOOLS` contract snapshot for this tool to assert `destructiveHint: False` alongside `idempotentHint: True`, so a regression here would fail `test_tools_list_snapshot` going forward — previously the test only checked `idempotentHint` and would not have caught this.
+   - Commit: `599a139` on `dev/PRD-21270` (synced with `main @ 19212eb`, unchanged since round 1 — no merge needed).
+   - Re-run: `uv run pytest -q` → `11 passed`. Confirmed the strengthened assertion actually catches the regression: temporarily restored the pre-fix `vaults.py` (`git show d936048:...`) on top of the new test and re-ran — `tests/test_tools.py::test_tools_list_snapshot` failed with `AssertionError: axcient_set_vault_connectivity_threshold: destructiveHint=None, expected False`, i.e. exactly the reviewer's finding. Restored the fixed `vaults.py` afterwards; full suite back to `11 passed`.
+   - Other gates re-run on the fixed code: Chinese-text scan — same pre-existing hits as round 1, all inside the frozen `docs/tickets/PRD-21270.md` (quoted Chinese wiki/SOP terms, not source or README), nothing new introduced by this change; `gitleaks` not installed on this host, skipped (same as round 1).
