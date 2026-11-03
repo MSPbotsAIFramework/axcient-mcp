@@ -74,7 +74,7 @@ def register(mcp: FastMCP) -> None:
             return to_envelope(exc)
         return dump_json(result)
 
-    @mcp.tool(annotations=ToolAnnotations(idempotentHint=True))
+    @mcp.tool(annotations=ToolAnnotations(idempotentHint=True, destructiveHint=False))
     async def axcient_set_vault_connectivity_threshold(
         vault_id: Annotated[int, Field(description="Axcient vault ID.")],
         value: Annotated[

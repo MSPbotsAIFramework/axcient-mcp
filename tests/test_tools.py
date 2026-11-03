@@ -36,7 +36,10 @@ EXPECTED_TOOLS = {
     "axcient_list_vaults": (set(), {"readOnlyHint": True}),
     "axcient_get_vault": ({"vault_id"}, {"readOnlyHint": True}),
     "axcient_get_vault_connectivity_threshold": ({"vault_id"}, {"readOnlyHint": True}),
-    "axcient_set_vault_connectivity_threshold": ({"vault_id", "value", "enabled"}, {"idempotentHint": True}),
+    "axcient_set_vault_connectivity_threshold": (
+        {"vault_id", "value", "enabled"},
+        {"idempotentHint": True, "destructiveHint": False},
+    ),
     "axcient_list_backup_jobs": ({"client_id", "device_id"}, {"readOnlyHint": True}),
     "axcient_get_backup_job": ({"client_id", "device_id", "job_id"}, {"readOnlyHint": True}),
     "axcient_get_backup_job_history": ({"client_id", "device_id", "job_id"}, {"readOnlyHint": True}),
