@@ -53,15 +53,9 @@
     "id": "TC-AXC-006",
     "ac": "AC6",
     "text": "Given a list endpoint has more results than the page size, when the matching axcient_list_* tool is called, then the result is capped at limit (default <=50, hard max <=200) and has_more is set correctly",
-    "type": "manual",
-    "steps": [
-      "Either use a real org with >50 clients, or feed the mocked vendor client a paged fixture of 60 records",
-      "Call axcient_list_clients with default limit",
-      "Inspect the returned count and has_more"
-    ],
-    "expect": "Exactly <=50 items returned, has_more=true; a second call with cursor returns the remainder",
-    "result": "untested",
-    "evidence": "needs a real vendor account with >50 clients, or a mocked paged fixture not yet built; not run"
+    "type": "auto",
+    "tests": ["tests/test_tools.py::test_successful_list_respects_limit_and_sets_has_more"],
+    "note": "Design offered either a real >50-client org or a mocked 60-record fixture; the dev leg built the mocked fixture, which fully proves the tool-level capping/has_more/cursor contract. It does not prove the vendor's own native pagination shape (unconfirmed per design's Open questions) — that remains unverifiable until a real account is available, but AC6 as written is about this service's capping behaviour, not the vendor's internals."
   },
   {
     "id": "TC-AXC-007",
@@ -99,6 +93,15 @@
     "text": "Given the vendor API returns 429 with Retry-After, when a tool call hits it, then the service retries with backoff and only returns {\"error\":{\"code\":\"rate_limited\",...}} after retries are exhausted",
     "type": "auto",
     "tests": ["tests/test_tools.py::test_429_triggers_bounded_retry_then_rate_limited_envelope"]
+  },
+  {
+    "id": "TC-AXC-011",
+    "ac": "AC7",
+    "text": "Given a mocked vendor 200 response, when axcient_set_vault_connectivity_threshold is called, then it POSTs the exact {value, enabled} body and returns the vendor's response unchanged",
+    "type": "auto",
+    "source": "dev",
+    "tests": ["tests/test_tools.py::test_set_vault_connectivity_threshold_sends_posted_body"],
+    "note": "Supplementary dev-added contract check, not a replacement for TC-AXC-007: it proves the request/response wiring is correct, but (per legs/dev.md '追加用例的效力') cannot prove real persistence across a GET/POST/GET round trip against vendor state, which is what AC7 actually asserts. TC-AXC-007 stays manual."
   },
   {
     "id": "TC-AXC-010",
