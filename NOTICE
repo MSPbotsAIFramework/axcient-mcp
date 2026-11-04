@@ -1,0 +1,9 @@
+Axcient x360Recover MCP Server
+Copyright 2026 MSPbots.ai
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+It was written by MSPbots.ai against the x360Recover REST API's live-probed
+contract, corroborated by a community-maintained OpenAPI specification
+(github.com/adamburley/AxcientAPI). Axcient's own public API reference portal
+is client-rendered and was not scrapeable read-only at the time this was
+built; no code from that or any other third-party project is included here.
